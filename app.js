@@ -22,7 +22,7 @@ const fetchData = async () => {
 const pintarCard = (data) => {
   data.forEach((producto) => {
     templateCard.querySelector('h5').textContent = producto.title;
-    templateCard.querySelector('p').textContent = `$${producto.precio}.00`;
+    templateCard.querySelector('p').textContent = `${producto.precio}`;
     templateCard
       .querySelector('img')
       .setAttribute('src', producto.thumbnailUrl);
@@ -35,14 +35,23 @@ const pintarCard = (data) => {
 
 const addCarrito = (e) => {
   if (e.target.classList.contains('btn-dark')) {
-   setCarrito(e.target.parentElement);
+    setCarrito(e.target.parentElement);
   }
   e.stopPropagation();
 };
 
 const setCarrito = (obj) => {
   const producto = {
-    id: obj.querySelector('.btn-dark').dataset.id
+    id: obj.querySelector('.btn-dark').dataset.id,
+    title: obj.querySelector('h5').textContent,
+    precio: obj.querySelector('p').textContent,
+    cantidad: 1,
+  };
+
+  if (carrito.hasOwnProperty(producto.id)) {
+    producto.cantidad = carrito[producto.id].cantidad + 1;
   }
-  console.log(producto)
+
+  carrito[producto.id] = { ...producto };
+  console.log(carrito);
 };
