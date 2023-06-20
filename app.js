@@ -9,10 +9,19 @@ let carrito = {};
 
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
+  if (localStorage.getItem('carrito')) {
+    carrito = JSON.parse(localStorage.getItem('carrito'));
+    pintarCarrito();
+  }
 });
 cards.addEventListener('click', (e) => {
   addCarrito(e);
 });
+
+items.addEventListener('click', (e) => {
+  btnAccion(e);
+});
+
 const fetchData = async () => {
   try {
     const res = await fetch('api.json');
@@ -62,7 +71,7 @@ const setCarrito = (obj) => {
 
 const pintarCarrito = () => {
   Object.values(carrito).forEach((producto) => {
-    items.innerHTML = ''
+    items.innerHTML = '';
     templateCarrito.querySelector('th').textContent = producto.id;
     templateCarrito.querySelectorAll('td')[0].textContent = producto.title;
     templateCarrito.querySelectorAll('td')[1].textContent = producto.cantidad;
@@ -75,17 +84,60 @@ const pintarCarrito = () => {
   });
 
   items.appendChild(fragment);
-  pintarFooter()
+  pintarFooter();
+
+  localStorage.setItem('carrito', JSON.stringify(carrito));
 };
 
 const pintarFooter = () => {
-  footer.innerHTML = ''
-  if(Object.keys(carrito).length === 0){
+  footer.innerHTML = '';
+  if (Object.keys(carrito).length === 0) {
     footer.innerHTML = `
     <th scope="row" colspan="5">Carrito vacío - comience a comprar!</th>
-    `
+    `;
+    return;
   }
-  const nCantidad = Object.values(carrito).reduce((acc, { cantidad }) => acc + cantidad,0)
-  const nPrecio = Object.values(carrito).reduce((acc, {cantidad,precio}) => acc + cantidad * precio,0)
-  console.log(nCantidad, nPrecio)
-}
+  const nCantidad = Object.values(carrito).reduce(
+    (acc, { cantidad }) => acc + cantidad,
+    0
+  );
+  const nPrecio = Object.values(carrito).reduce(
+    (acc, { cantidad, precio }) => acc + cantidad * precio,
+    0
+  );
+
+  templateFooter.querySelectorAll('td')[0].textContent = nCantidad;
+  templateFooter.querySelector('span').textContent = nPrecio;
+
+  const clone = templateFooter.cloneNode(true);
+  fragment.appendChild(clone);
+  footer.appendChild(fragment);
+
+  const btnVaciar = document.getElementById('vaciar-carrito');
+  btnVaciar.addEventListener('click', () => {
+    carrito = {};
+    items.innerHTML = '';
+    pintarCarrito();
+  });
+};
+
+const btnAccion = (e) => {
+  if (e.target.classList.contains('btn-info')) {
+    const producto = carrito[e.target.dataset.id];
+    producto.cantidad++;
+    carrito[e.target.dataset.id] = { ...producto };
+    pintarCarrito();
+  }
+
+  if (e.target.classList.contains('btn-danger')) {
+    const producto = carrito[e.target.dataset.id];
+    producto.cantidad--;
+    if (producto.cantidad === 0) {
+      delete(carrito[e.target.dataset.id]);
+    } else {
+      carrito[e.target.dataset.id] = { ...producto };
+    }
+    pintarCarrito();
+  }
+  e.stopPropagation();
+};
